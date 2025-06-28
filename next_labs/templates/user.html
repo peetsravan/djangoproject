@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .app-box {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px;
+            width: 300px;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-box img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 15px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Welcome, {{ request.user.username }}</h2>
+
+        <div class="buttons">
+
+            <a href="{% url 'submit_task' %}">
+                <button>Submit a Task</button>
+            </a>
+            <a href="{% url 'profile' %}">
+                <button>View Profile</button>
+            </a>
+
+            <form method="get" action="{% url 'logout' %}">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <p><strong>Points Earned:</strong> {{ request.user.points_earned }}</p>
+
+    <h3>Available Apps</h3>
+    <div class="app-container">
+        {% for app in apps %}
+            <div class="app-box">
+                <img src="{{ app.picture.url }}" alt="{{ app.app_name }} Image">
+                <h4>{{ app.app_name }}</h4>
+                <p><strong>Category:</strong> {{ app.app_category }}</p>
+                <p><strong>Sub Category:</strong> {{ app.sub_category }}</p>
+                <p><strong>Points:</strong> {{ app.points }}</p>
+                <p>{{ app.description }}</p>
+                <a href="{{ app.app_link }}" target="_blank">
+                    <button>Download App</button>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

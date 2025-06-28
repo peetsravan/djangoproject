@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            padding: 10px;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+<body>
+    <h2>Welcome, {{ request.user.username }} (Admin)</h2>
+
+    <a href="{% url 'add_app' %}">
+        <button>Add New App</button>
+    </a>
+
+    <a href="{% url 'logout' %}">
+        <button>Logout</button>
+    </a>
+    <a href="{% url 'review_screenshots' %}">
+        <button>Review Uploaded Screenshots</button>
+    </a>
+    <h3>All Apps</h3>
+
+    {% if apps %}
+        <table>
+            <tr>
+                <th>App Name</th>
+                <th>Link</th>
+                <th>Category</th>
+                <th>Sub Category</th>
+                <th>Points</th>
+                <th>Description</th>
+            </tr>
+            {% for app in apps %}
+            <tr>
+                <td>{{ app.app_name }}</td>
+                <td><a href="{{ app.app_link }}" target="_blank">Open</a></td>
+                <td>{{ app.app_category }}</td>
+                <td>{{ app.sub_category }}</td>
+                <td>{{ app.points }}</td>
+                <td>{{ app.description }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No apps have been added yet.</p>
+    {% endif %}
+</body>
+</html>

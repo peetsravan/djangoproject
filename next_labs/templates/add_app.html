@@ -1,0 +1,21 @@
+<h2>Add New App</h2>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>App Name:</label><input type="text" name="app_name"><br>
+    <label>Link:</label><input type="url" name="app_link"><br>
+    <label>Category:</label>
+    <select name="app_category">
+        <option value="social">Social</option>
+        <option value="information">Information</option>
+        <option value="entertainment">Entertainment</option>
+    </select><br>
+    <label>Sub Category:</label>
+    <select name="sub_category">
+        <option value="passing_time">Passing Time</option>
+        <option value="knowledgeble">Knowledgeable</option>
+    </select><br>
+    <label>Description:</label><textarea name="description"></textarea><br>
+    <label>Points:</label><input type="number" name="points"><br>
+    <label>App Image:</label><input type="file" name="picture"><br>
+    <button type="submit">Add App</button>
+</form>

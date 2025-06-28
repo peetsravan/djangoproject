@@ -1,0 +1,15 @@
+<h2>Pending Screenshot Submissions</h2>
+
+{% for t in tasks %}
+  <div>
+    <p><strong>User:</strong> {{ t.user.username }}</p>
+    <p><strong>App:</strong> {{ t.apps.app_name }}</p>
+    <p><strong>Points:</strong> {{ t.apps.points }}</p>
+    <img src="{{ t.screenshot.url }}" width="300"><br>
+    <a href="{% url 'approve_screenshot' t.id %}">
+        <button>Approve</button>
+    </a>
+  </div>
+{% empty %}
+  <p>No screenshots pending review.</p>
+{% endfor %}

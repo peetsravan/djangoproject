@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h2>User Profile</h2>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Points Earned:</strong> {{ user.points_earned }}</p>
+    <a href="{% url 'user_home' %}">
+        <button>Back to Home</button>
+    </a>
+</body>
+</html>
