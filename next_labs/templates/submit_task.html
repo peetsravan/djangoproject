@@ -1,40 +1,122 @@
-<form method="POST" enctype="multipart/form-data">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <title>Submit Screenshot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Dropzone assets -->
+  <link rel="stylesheet" href="{% static 'dropzone/dropzone.css' %}">
+  <script src="{% static 'dropzone/dropzone-min.js' %}"></script>
+
+  <style>
+    .dropzone {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      background: #f9f9f9;
+    }
+    #upload-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+  <form id="dz-form"
+        class="dropzone w-full max-w-md bg-white p-6 rounded-xl shadow-xl"
+        action="{% url 'submit_task' %}"
+        method="POST"
+        enctype="multipart/form-data">
+
     {% csrf_token %}
 
-    <label>Select App:</label>
-    <select name="app_id" required>
-        {% for app in apps %}
-            <option value="{{ app.id }}">{{ app.app_name }}</option>
-        {% endfor %}
-    </select><br><br>
+    <!-- App dropdown -->
+    <label class="block font-medium mb-1 text-gray-700">Select App</label>
+    <select name="app_id" required class="w-full mb-4 border p-2 rounded">
+      {% for app in apps %}
+        <option value="{{ app.id }}">{{ app.app_name|capfirst }}</option>
+      {% endfor %}
+    </select>
 
-    <div id="drop-area" style="width: 200px; height: 80px; border: 1px dashed #aaa; 
-         text-align: center; line-height: 75px; font-size: 13px; color: #555; cursor: pointer; margin-top: 10px;">
-        Drop or click
-        <input type="file" name="screenshot" id="file-input" accept="image/*" style="display: none;" required>
-    </div><br>
+    <!-- Dropzone area -->
+    <div class="dz-message text-gray-500">
+      Drag & drop the screenshot here, or click to choose
+    </div>
 
-    <button type="submit">Submit</button>
-</form>
+    <!-- Upload button -->
+    <button type="button"
+            id="upload-btn"
+            disabled
+            class="mt-6 w-full py-2 px-4 rounded bg-blue-600 text-white font-semibold">
+      Upload screenshot
+    </button>
+  </form>
 
-<script>
-    const dropArea = document.getElementById('drop-area');
-    const fileInput = document.getElementById('file-input');
+  <script>
+    // CSRF helper
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
 
-    dropArea.addEventListener('click', () => fileInput.click());
+    const csrftoken = getCookie('csrftoken');
 
-    dropArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropArea.style.borderColor = '#007bff';
+    Dropzone.autoDiscover = false;
+
+    const myDropzone = new Dropzone("#dz-form", {
+      paramName: "screenshot",
+      maxFiles: 1,
+      acceptedFiles: "image/*",
+      autoProcessQueue: false, // Manual upload
+
+      sending: function(file, xhr, formData) {
+        const appId = document.querySelector('select[name="app_id"]').value;
+        formData.append('app_id', appId);
+        formData.append('csrfmiddlewaretoken', csrftoken); // CSRF token as form field
+      },
+
+      success: function(file, response) {
+        alert("Uploaded successfully!");
+        window.location.href = "{% url 'user_home' %}";
+      },
+
+      error: function(file, response) {
+        const message = (typeof response === "string") ? response : (response.error || "Upload failed");
+        alert(message);
+      }
     });
 
-    dropArea.addEventListener('dragleave', () => {
-        dropArea.style.borderColor = '#aaa';
+    // Enable/disable upload button
+    const btn = document.getElementById('upload-btn');
+    myDropzone.on('addedfile', () => { btn.disabled = false; });
+    myDropzone.on('removedfile', () => {
+      if (myDropzone.getQueuedFiles().length === 0) btn.disabled = true;
     });
 
-    dropArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropArea.style.borderColor = '#aaa';
-        fileInput.files = e.dataTransfer.files;
+    // Click event to trigger upload
+    btn.addEventListener('click', () => {
+      if (myDropzone.getQueuedFiles().length) {
+        myDropzone.processQueue();
+      } else {
+        alert('Please choose a screenshot first.');
+      }
     });
-</script>
+  </script>
+
+</body>
+</html>

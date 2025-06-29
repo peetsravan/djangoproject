@@ -2,34 +2,70 @@ from django.shortcuts import render,redirect
 from .models import CustomUser,Apps,task
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+
 def register(request):
-    if request.method =='POST':
-        username = request.POST.get('username')
-        email=request.POST.get('email')
-        password=request.POST.get('password')
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        # 1. Validate fields are not empty
+        if not username or not email or not password:
+            return render(request, 'register.html', {
+                'error': 'All fields are required.'
+            })
+
+        # 2. Check for duplicate username
+        if CustomUser.objects.filter(username=username).exists():
+            return render(request, 'register.html', {
+                'error': 'Username already taken.'
+            })
+
+        # 3. Check for duplicate email
         if CustomUser.objects.filter(email=email).exists():
-            return render(request,'register.html',{'error':'user exists'})
-        user=CustomUser.objects.create_user(username=username,email=email,password=password)
+            return render(request, 'register.html', {
+                'error': 'Email already registered.'
+            })
+
+        # 4. Create user securely
+        user = CustomUser.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
         user.save()
         return redirect('login_page')
-    return render(request,'register.html')
+
+    return render(request, 'register.html')
+
 def login_page(request):
-    if request.method=='POST':
-        username=request.POST.get('username')
-        password=request.POST.get('password')
-        user = authenticate(request,username=username,password=password)
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
         if user is None:
-            return render(request,'login.html',{'error':'invalid credentials'})
-        login(request,user)
+            return render(request, 'login.html', {'error': 'invalid credentials'})
+
+        login(request, user)
+
         if user.is_admin:
             return redirect('admin_home')
         else:
             return redirect('user_home')
+
     return render(request, 'login.html')
+
+
 
 @login_required
 def logout_page(request):
     logout(request)
+    messages.success(request, "You’ve been logged out.")
     return redirect('login_page')
 
 @login_required
@@ -38,6 +74,7 @@ def admin_home(request):
         return redirect('login_page')
     apps=Apps.objects.all()
     return render(request,'admin.html',{'apps':apps})
+
 @login_required
 def user_home(request):
     apps=Apps.objects.all()
@@ -96,19 +133,31 @@ def approve_screenshot(request, task_id):
 
 @login_required
 def submit_task(request):
-    if request.method == 'POST':
-        app_id = request.POST.get('app_id')
-        screenshot = request.FILES.get('screenshot')
-        app = Apps.objects.get(id=app_id)
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        app_id = request.POST.get("app_id")
+        screenshot = request.FILES.get("screenshot")
 
-        task.objects.create(user=request.user, apps=app, screenshot=screenshot)
-        return redirect('user_home')
+        if not app_id or not screenshot:
+            return JsonResponse({"error": "Both app and screenshot are required."}, status=400)
+
+        app = get_object_or_404(Apps, id=app_id)
+
+        task.objects.create(
+            user=request.user,
+            apps=app,
+            screenshot=screenshot,
+            approved=False
+        )
+
+        return JsonResponse({"status": "ok"})
 
     apps = Apps.objects.all()
-    return render(request, 'submit_task.html', {'apps': apps})
+    return render(request, "submit_task.html", {"apps": apps})
 
 
-from django.contrib.auth.decorators import login_required
+
+
+
 
 @login_required
 def profile_page(request):
